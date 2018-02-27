@@ -6,6 +6,7 @@ TagManager:
   tags:
   - trump
   - Ghost
+  - ghostHome
   layers:
   - Default
   - TransparentFX
