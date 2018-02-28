@@ -4,22 +4,27 @@ using UnityEngine;
 
 public class trump : MonoBehaviour {
 
+
+	public AudioClip chomp1;
+	public AudioClip chomp2;
 	public Vector2 orientation;
 
 	public float speed=4.0f;
 	public Sprite idleSprite;
+
+
+	private bool playedChomp1 = false;
+	private AudioSource audio;
 	private Vector2 direction = Vector2.zero; 
 	private Vector2 nextDirection;
-
 	private int coinsConsumed=0;
-
-
-
 	private Node currentNode, previousNode, targetNode;
 
 
 	// Use this for initialization
 	void Start () {
+
+		audio = transform.GetComponent<AudioSource> ();
 		Node node = GetNodeAtPosition (transform.localPosition);
 
 		if (node != null) {
@@ -28,9 +33,6 @@ public class trump : MonoBehaviour {
 			Debug.Log (currentNode);
 		
 		}
-
-
-
 
 		direction = Vector2.down;
 		orientation = Vector2.down;
@@ -51,6 +53,25 @@ public class trump : MonoBehaviour {
 
 		ConsumCoin();
 	}
+
+
+
+	void PlayChompSound(){
+
+		if (playedChomp1) {
+
+			audio.PlayOneShot (chomp2);
+			playedChomp1 = false;
+
+		} else {
+
+			audio.PlayOneShot (chomp1);
+			playedChomp1 = true;
+		}
+
+	}
+
+
 
 	void ChechInput(){
 
@@ -185,6 +206,7 @@ public class trump : MonoBehaviour {
 
 			teleport tile = o.GetComponent<teleport> ();
 			if (tile != null) {
+				
 				if (!tile.didConsume && (tile.isCoin || tile.isExtraCoin)) {
 
 					o.GetComponent<SpriteRenderer> ().enabled = false;
@@ -192,6 +214,18 @@ public class trump : MonoBehaviour {
 
 					GameObject.Find ("Game").GetComponent<GameBoard> ().score += 1;
 					coinsConsumed++;
+					PlayChompSound ();
+
+					if(tile.isExtraCoin){
+
+						GameObject[] ghost = GameObject.FindGameObjectsWithTag ("Ghost");
+
+						foreach (GameObject go in ghost) {
+
+							go.GetComponent<Ghost> ().StartFrightenedMode ();
+						}
+
+					}
 				}
 			}
 		}
