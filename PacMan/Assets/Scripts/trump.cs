@@ -7,11 +7,16 @@ public class trump : MonoBehaviour {
 
 	public AudioClip chomp1;
 	public AudioClip chomp2;
+
+	public RuntimeAnimatorController chompAnimation;
+	public RuntimeAnimatorController deathAnimation;
+
 	public Vector2 orientation;
 
 	public float speed=4.0f;
 	public Sprite idleSprite;
 
+	public bool canMove=true;
 
 	private bool playedChomp1 = false;
 	private AudioSource audio;
@@ -19,6 +24,7 @@ public class trump : MonoBehaviour {
 	private Vector2 nextDirection;
 	private int coinsConsumed=0;
 	private Node currentNode, previousNode, targetNode;
+	private Node startingPosition;
 
 
 	// Use this for initialization
@@ -26,6 +32,9 @@ public class trump : MonoBehaviour {
 
 		audio = transform.GetComponent<AudioSource> ();
 		Node node = GetNodeAtPosition (transform.localPosition);
+
+		startingPosition = node;
+
 
 		if (node != null) {
 
@@ -39,19 +48,49 @@ public class trump : MonoBehaviour {
 		ChangePosition (direction);
 	}
 
+	public void MoveToStartingPosition(){
+		
+
+		transform.position = startingPosition.transform.position;
+
+		transform.GetComponent<SpriteRenderer> ().sprite = idleSprite;
+
+		direction = Vector2.up;
+		orientation = Vector2.up;
+
+		UpdateOrientation ();
+	}
+
+	public void Restart(){
+
+		canMove = true;
+
+		currentNode = startingPosition;
+
+		nextDirection = Vector2.up;
+
+		transform.GetComponent<Animator> ().runtimeAnimatorController = chompAnimation;;
+		transform.GetComponent<Animator> ().enabled = true;
+
+		ChangePosition (direction);
+	}
+
+
 	// Update is called once per frame
 	void Update () {
 
+		if (canMove) {
 
-		ChechInput ();
+			ChechInput ();
 
-		Move ();
+			Move ();
 
-		UpdateOrientation ();
+			UpdateOrientation ();
 
-		UpdateAnimationState ();
+			UpdateAnimationState ();
 
-		ConsumCoin();
+			ConsumCoin ();
+		}
 	}
 
 
@@ -212,7 +251,23 @@ public class trump : MonoBehaviour {
 					o.GetComponent<SpriteRenderer> ().enabled = false;
 					tile.didConsume = true;
 
-					GameObject.Find ("Game").GetComponent<GameBoard> ().score += 1;
+					if (GameMenu.isOnePlayerGame) {
+
+						GameObject.Find ("Game").transform.GetComponent<GameBoard> ().playerOneScore += 10;
+
+					} else {
+
+						if (GameObject.Find ("Game").transform.GetComponent<GameBoard> ().isPlayerOneUp) {
+
+							GameObject.Find ("Game").transform.GetComponent<GameBoard> ().playerOneScore += 10;
+
+						} else {
+
+							GameObject.Find ("Game").transform.GetComponent<GameBoard> ().playerTwoScore += 10;
+
+						}
+					}
+
 					coinsConsumed++;
 					PlayChompSound ();
 

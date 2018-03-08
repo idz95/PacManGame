@@ -53,10 +53,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 3.9
+  frightenedModeMoveSpeed: 2.9
   pinkyReleaseTimer: 5
+  inkyReleaseTimer: 14
+  clydeReleaseTimer: 21
   ghostReleaseTimer: 0
+  disabledTimer: 0
+  WaitForActive: 0
+  frightenedModeDuration: 10
+  startBlinkingAt: 7
   isInGhostHouse: 0
   startingPosition: {fileID: 0}
+  homeNode: {fileID: 0}
   scatterModeTimer1: 7
   chaseModeTimer1: 20
   scatterModeTimer2: 7
@@ -64,6 +72,12 @@ MonoBehaviour:
   scatterModeTimer3: 5
   chaseModeTimer3: 20
   scatterModeTimer4: 5
+  ghostUp: {fileID: 0}
+  ghostDown: {fileID: 0}
+  ghostLeft: {fileID: 0}
+  ghostRight: {fileID: 0}
+  ghostWhite: {fileID: 0}
+  ghostBlue: {fileID: 0}
   ghostType: 0
 --- !u!212 &212329295263784192
 SpriteRenderer:
@@ -99,7 +113,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: b448a5f6fcbb90646a05f7cc34c93426, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 601a128a5cbe6a44d8c90b0e84221b3f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

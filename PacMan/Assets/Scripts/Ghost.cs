@@ -6,16 +6,26 @@ public class Ghost : MonoBehaviour {
 
 	public float moveSpeed = 5.9f;
 	public float frightenedModeMoveSpeed = 2.9f;
+	public float normalMovespeed=5.9f;
+
+	public bool canMove = true;
+	public bool active=false;
+	public bool noActive = false;
 
 	public int pinkyReleaseTimer=5;
 	public int inkyReleaseTimer=14;
 	public int clydeReleaseTimer = 21;
 	public float ghostReleaseTimer = 0;
 
-	public int frightenedModeDuration = 10;
-	public int startBlinkingAt = 7;
+
+	public float disabledTimer=0;
+	public float WaitForActive;
+
+	public int frightenedModeDuration = 2;
+	public int startBlinkingAt = 1;
 
 	public bool isInGhostHouse = false;
+	public static bool disabled=false;
 
 	public Node startingPosition;
 	public Node homeNode;
@@ -44,6 +54,8 @@ public class Ghost : MonoBehaviour {
 	private bool frightenedModeIsWhite = false;
 
 	private float previousMoveSpeed;
+
+	private AudioSource backgroundAudio;
 
 	public enum Mode
 	{
@@ -79,6 +91,9 @@ public class Ghost : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
+
+		backgroundAudio = GameObject.Find ("Game").transform.GetComponent<AudioSource> ();
+
 		trump = GameObject.FindGameObjectWithTag("trump");
 		Node node = GetNodeAtPosition (transform.localPosition);
 
@@ -102,18 +117,135 @@ public class Ghost : MonoBehaviour {
 		UpdateAnimatorController ();
 
 	}
+
+
+	public void MoveToStartingPosition(){
+
+
+		if (transform.name != "Ghost") {
+			isInGhostHouse = true;
+		}
+
+		transform.position = startingPosition.transform.position;
+
+		if (isInGhostHouse) {
+			direction = Vector2.up;
+		} else {
+			direction = Vector2.left;
+		}
+		UpdateAnimatorController ();
+	}
+
+	public void Restart(){
+
+		canMove = true;
+
+		currentMode = Mode.Scatter;
+
+		moveSpeed = normalMovespeed;
+
+		previousMoveSpeed = 0;
+
+
+		ghostReleaseTimer = 0;
+		modeChangeIteration = 1;
+		modeChangeTimer = 0;
+
+
+
+		currentNode = startingPosition;
+
+		if (isInGhostHouse) {
+
+			direction = Vector2.up;
+			targetNode = currentNode.neighbors [0];
+		} else {
+			direction = Vector2.left;
+			targetNode = ChooseNextNode ();
+		}
+
+		previousNode = currentNode;
+
+
+	}
 	
 	// Update is called once per frame
 	void Update () {
 
-		ModeUpdate ();
+		if (canMove) {
 
-		Move ();
+			ModeUpdate ();
 
-		ReleaseGhosts ();
+			Move ();
+
+			ReleaseGhosts ();
+
+			CheckCollision ();
+
+		}
 	}
 
+	void CheckCollision(){
+		
+		Rect ghostRect = new Rect (transform.position, transform.GetComponent<SpriteRenderer> ().sprite.bounds.size / 4);
+		Rect trumpRect = new Rect (trump.transform.position, trump.transform.GetComponent<SpriteRenderer> ().sprite.bounds.size / 4);
 
+		if (ghostRect.Overlaps (trumpRect)) {
+			
+			if (currentMode == Mode.Frightened) {
+				disabled = true;
+				Consumed ();
+			} else {
+
+
+
+				GameObject.Find ("Game").transform.GetComponent<GameBoard> ().StartDeath ();
+			}
+		}
+	}
+		
+
+	void Consumed(){
+
+
+		if (GameMenu.isOnePlayerGame) {
+			GameObject.Find ("Game").GetComponent<GameBoard> ().playerOneScore += 200;
+		} else {
+			if (GameObject.Find ("Game").GetComponent<GameBoard> ().isPlayerOneUp) {
+				GameObject.Find ("Game").GetComponent<GameBoard> ().playerOneScore += 200;
+			} else {
+				GameObject.Find ("Game").GetComponent<GameBoard> ().playerTwoScore += 200;
+			}
+		}
+
+		if (disabled == true) {
+			
+			DisableGameObject ();
+		}
+
+		GameObject.Find ("Game").transform.GetComponent<GameBoard> ().StartConsumed (this.GetComponent<Ghost> ());
+	}
+
+	public void DisableGameObject(){
+
+
+		active = true;
+		StartCoroutine (GhostDeath (2));
+
+	}
+
+	public void EnableGameObject(){
+
+
+			gameObject.SetActive (true);
+
+	}
+
+	IEnumerator GhostDeath(float delay){
+		gameObject.SetActive (false);
+		yield return new WaitForSeconds (delay);
+		gameObject.SetActive (true);
+	}
 
 	void UpdateAnimatorController(){
 
@@ -243,6 +375,10 @@ public class Ghost : MonoBehaviour {
 			frightenedModeTimer += Time.deltaTime;
 
 			if (frightenedModeTimer >= frightenedModeDuration) {
+
+				backgroundAudio.clip = GameObject.Find ("Game").transform.GetComponent<GameBoard> ().backgroundAudioNormal;
+				backgroundAudio.Play ();
+
 				frightenedModeTimer = 0;
 				ChangeMode (previousMode);
 			}
@@ -280,14 +416,20 @@ public class Ghost : MonoBehaviour {
 			moveSpeed = frightenedModeMoveSpeed;
 		}
 
-		previousMode = currentMode;
-		currentMode = m;
+		if (currentMode != m) {
+			previousMode = currentMode;
+			currentMode = m;
+		}
 
 		UpdateAnimatorController ();
 	}
 
 
 	public void StartFrightenedMode(){
+
+		frightenedModeTimer = 0;
+		backgroundAudio.clip = GameObject.Find ("Game").transform.GetComponent<GameBoard> ().backgroundAudioFrightened;
+		backgroundAudio.Play ();
 		ChangeMode (Mode.Frightened);
 	}
 
@@ -328,7 +470,7 @@ public class Ghost : MonoBehaviour {
 
 		Vector2 targetTile = trumpTile + (2 * trumpOrientatiom);
 
-		Vector2 tempBlinkyPosition = GameObject.Find ("Ghost").transform.localPosition;
+		Vector2 tempBlinkyPosition = GameObject.Find ("trump").transform.localPosition;
 
 		int blinkyPositionX = Mathf.RoundToInt (tempBlinkyPosition.x);
 		int blinkyPositionY = Mathf.RoundToInt (tempBlinkyPosition.y);
@@ -550,3 +692,4 @@ public class Ghost : MonoBehaviour {
 
 
 }
+
