@@ -22,7 +22,7 @@ public class trump : MonoBehaviour {
 	private AudioSource audio;
 	private Vector2 direction = Vector2.zero; 
 	private Vector2 nextDirection;
-	private int coinsConsumed=0;
+
 	private Node currentNode, previousNode, targetNode;
 	private Node startingPosition;
 
@@ -46,6 +46,32 @@ public class trump : MonoBehaviour {
 		direction = Vector2.down;
 		orientation = Vector2.down;
 		ChangePosition (direction);
+
+		if (GameBoard.isPlayerOneUp) {
+			SetDifficultyForLevel (GameBoard.playerOneLevel);
+		} else {
+			SetDifficultyForLevel (GameBoard.playerTwoLevel);
+		}
+
+	}
+
+	void SetDifficultyForLevel (int level){
+
+		if (level == 2) {
+			speed = 7;
+
+		} else if (level == 3) {
+			speed = 8;
+
+
+		} else if (level == 4) {
+			speed = 9;
+
+
+		} else if (level == 5) {
+			speed = 10;
+
+		}
 	}
 
 	public void MoveToStartingPosition(){
@@ -253,22 +279,24 @@ public class trump : MonoBehaviour {
 
 					if (GameMenu.isOnePlayerGame) {
 
-						GameObject.Find ("Game").transform.GetComponent<GameBoard> ().playerOneScore += 10;
+						GameBoard.playerOneScore += 10;
+						GameObject.Find ("Game").transform.GetComponent<GameBoard> ().playerOneCoinsConsumed++;
 
 					} else {
 
-						if (GameObject.Find ("Game").transform.GetComponent<GameBoard> ().isPlayerOneUp) {
+						if (GameBoard.isPlayerOneUp) {
 
-							GameObject.Find ("Game").transform.GetComponent<GameBoard> ().playerOneScore += 10;
+							GameBoard.playerOneScore += 10;
+							GameObject.Find ("Game").transform.GetComponent<GameBoard> ().playerTwoCoinsConsumed++;
 
 						} else {
 
-							GameObject.Find ("Game").transform.GetComponent<GameBoard> ().playerTwoScore += 10;
+							GameBoard.playerTwoScore += 10;
+							GameObject.Find ("Game").transform.GetComponent<GameBoard> ().playerTwoCoinsConsumed++;
 
 						}
 					}
-
-					coinsConsumed++;
+						
 					PlayChompSound ();
 
 					if(tile.isExtraCoin){

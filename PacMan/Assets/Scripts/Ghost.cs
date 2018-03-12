@@ -21,8 +21,8 @@ public class Ghost : MonoBehaviour {
 	public float disabledTimer=0;
 	public float WaitForActive;
 
-	public int frightenedModeDuration = 2;
-	public int startBlinkingAt = 1;
+	public int frightenedModeDuration = 10;
+	public int startBlinkingAt = 7;
 
 	public bool isInGhostHouse = false;
 	public static bool disabled=false;
@@ -91,7 +91,11 @@ public class Ghost : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-
+		if (GameBoard.isPlayerOneUp) {
+			SetDifficultyForLevel (GameBoard.playerOneLevel);
+		} else {
+			SetDifficultyForLevel (GameBoard.playerTwoLevel);
+		}
 		backgroundAudio = GameObject.Find ("Game").transform.GetComponent<AudioSource> ();
 
 		trump = GameObject.FindGameObjectWithTag("trump");
@@ -116,6 +120,102 @@ public class Ghost : MonoBehaviour {
 
 		UpdateAnimatorController ();
 
+	}
+
+	void SetDifficultyForLevel (int level){
+
+
+		if (level == 2) {
+			scatterModeTimer1=7;
+			scatterModeTimer2=7;
+			scatterModeTimer3=5;
+			scatterModeTimer4=1;
+
+			chaseModeTimer1=20;
+			chaseModeTimer2=20;
+			chaseModeTimer3=1033;
+
+			frightenedModeDuration=8;
+			startBlinkingAt=6;
+
+			pinkyReleaseTimer=4;
+			inkyReleaseTimer=12;
+			clydeReleaseTimer=18;
+
+			moveSpeed=6.9f;
+			normalMovespeed=6.9f;
+			frightenedModeMoveSpeed=3.9f;
+
+		} else if (level == 3) {
+			
+			scatterModeTimer1=7;
+			scatterModeTimer2=7;
+			scatterModeTimer3=5;
+			scatterModeTimer4=1;
+
+			chaseModeTimer1=20;
+			chaseModeTimer2=20;
+			chaseModeTimer3=1033;
+
+			frightenedModeDuration=6;
+			startBlinkingAt=4;
+
+			pinkyReleaseTimer=3;
+			inkyReleaseTimer=10;
+			clydeReleaseTimer=15;
+
+			moveSpeed=7.9f;
+			normalMovespeed=7.9f;
+			frightenedModeMoveSpeed=4.9f;
+
+
+		} else if (level == 4) {
+			
+			scatterModeTimer1=5;
+			scatterModeTimer2=5;
+			scatterModeTimer3=5;
+			scatterModeTimer4=1;
+
+			chaseModeTimer1=20;
+			chaseModeTimer2=20;
+			chaseModeTimer3=1033;
+
+			//mijenjati
+			frightenedModeDuration=4;
+			startBlinkingAt=2;
+
+			pinkyReleaseTimer=2;
+			inkyReleaseTimer=8;
+			clydeReleaseTimer=13;
+
+			moveSpeed=8.9f;
+			normalMovespeed=8.9f;
+			frightenedModeMoveSpeed=5.9f;
+
+
+		} else if (level == 5) {
+
+			scatterModeTimer1=7;
+			scatterModeTimer2=7;
+			scatterModeTimer3=5;
+			scatterModeTimer4=1;
+
+			chaseModeTimer1=20;
+			chaseModeTimer2=20;
+			chaseModeTimer3=1033;
+
+			frightenedModeDuration=2;
+			startBlinkingAt=1;
+
+			pinkyReleaseTimer=2;
+			inkyReleaseTimer=5;
+			clydeReleaseTimer=8;
+
+			moveSpeed=9.9f;
+			normalMovespeed=9.9f;
+			frightenedModeMoveSpeed=5.9f;
+
+		}
 	}
 
 
@@ -209,44 +309,49 @@ public class Ghost : MonoBehaviour {
 
 
 		if (GameMenu.isOnePlayerGame) {
-			GameObject.Find ("Game").GetComponent<GameBoard> ().playerOneScore += 200;
+			GameBoard.playerOneScore += 200;
 		} else {
-			if (GameObject.Find ("Game").GetComponent<GameBoard> ().isPlayerOneUp) {
-				GameObject.Find ("Game").GetComponent<GameBoard> ().playerOneScore += 200;
+			
+			if (GameBoard.isPlayerOneUp) {
+				GameBoard.playerOneScore += 200;
 			} else {
-				GameObject.Find ("Game").GetComponent<GameBoard> ().playerTwoScore += 200;
+				GameBoard.playerTwoScore += 200;
 			}
 		}
 
 		if (disabled == true) {
-			
-			DisableGameObject ();
+
+
+			//transform.position = startingPosition.transform.position;
+			currentNode = startingPosition;
+
+			if (isInGhostHouse) {
+
+				direction = Vector2.up;
+				targetNode = currentNode.neighbors [0];
+			} else {
+				direction = Vector2.left;
+				targetNode = ChooseNextNode ();
+			}
+
+			previousNode = currentNode;
+	
+			//StartCoroutine (unfrezzeGhost (2));
 		}
 
 		GameObject.Find ("Game").transform.GetComponent<GameBoard> ().StartConsumed (this.GetComponent<Ghost> ());
 	}
 
-	public void DisableGameObject(){
 
-
-		active = true;
-		StartCoroutine (GhostDeath (2));
-
-	}
-
-	public void EnableGameObject(){
-
-
-			gameObject.SetActive (true);
-
-	}
-
-	IEnumerator GhostDeath(float delay){
-		gameObject.SetActive (false);
+	/*
+	IEnumerator unfrezzeGhost(float delay){
+		
+		gameObject.transform.GetComponent<SpriteRenderer> ().enabled = false;
 		yield return new WaitForSeconds (delay);
-		gameObject.SetActive (true);
+
 	}
 
+*/
 	void UpdateAnimatorController(){
 
 		if (currentMode != Mode.Frightened) {

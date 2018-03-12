@@ -12,18 +12,32 @@ public class GameBoard : MonoBehaviour {
 	private bool didStartDeath=false;
 	private bool didStartConsumed = false;
 
+	public static int playerOneLevel=1;
+	public static int playerTwoLevel=1;
+
+	public int playerOneCoinsConsumed = 0;
+	public int playerTwoCoinsConsumed = 0;
+
 	public int totalCoins = 0;
 	public int score = 0;
-	public int playerOneScore = 0;
-	public int playerTwoScore=0;
-	public int trumpLives = 3;
+	public static int playerOneScore = 0;
+	public static int playerTwoScore=0;
+	public static int trumpLives = 3;
 
-	public bool isPlayerOneUp=true;
+	public static bool isPlayerOneUp=true;
+	public bool shouldBlink=false;
+
+	public float blinkIntervalTime=0.1f;
+
+	private float blinkIntervalTimer = 0;
 
 	public AudioClip backgroundAudioNormal;
 	public AudioClip backgroundAudioFrightened;
 	public AudioClip backgroundAudioDead;
 	public AudioClip consumedGhostAudioClip;
+
+	public Sprite mapaPlava;
+	public Sprite mapaBijela;
 
 	public Text playerText;
 	public Text readyText;
@@ -39,6 +53,8 @@ public class GameBoard : MonoBehaviour {
 	public Text consumedGhostScoretext;
 
 	public GameObject[,] board = new GameObject[boardWidth,boardHeight];
+
+	private bool didIncrementLevel = false;
 	// Use this for initialization
 	void Start () {
 
@@ -68,18 +84,32 @@ public class GameBoard : MonoBehaviour {
 
 		}
 
+		if (isPlayerOneUp) {
+			if (playerOneLevel == 1) {
+				GetComponent<AudioSource> ().Play ();
+			}
+		} else {
+			if (playerTwoLevel == 1) {
+				GetComponent<AudioSource> ().Play ();
+			}
+		}
+
 		StartGame ();
 	}
 
 	void Update(){
 
 		UpdateUI ();
+
+		CheckCoinsConsumed ();
+
+		CheckShouldBlink ();
 	}
 
 	void UpdateUI(){
 
 		playerOneScoreText.text = playerOneScore.ToString ();
-		playerTwoScoreText.text = playerTwoScore.ToString ();
+
 
 		if (trumpLives == 3) {
 
@@ -99,18 +129,107 @@ public class GameBoard : MonoBehaviour {
 
 	}
 
+	void CheckCoinsConsumed(){
+
+		if (playerOneUp) {
+			//player 1. playing
+			if (totalCoins == playerOneCoinsConsumed) {
+				PlayerWin (1);
+			}
+
+		} else {
+			//player2 play
+
+
+		}
+	}
+
+	void PlayerWin(int playerNum){
+
+		if (playerNum==1) {
+			if (!didIncrementLevel) {
+				didIncrementLevel = true;
+				playerOneLevel++;
+			}
+		} else {
+			if (!didIncrementLevel) {
+				didIncrementLevel = true;
+				playerTwoLevel++;
+			}
+		}
+
+		StartCoroutine (processWin (2));
+	}
+
+	IEnumerator processWin(float delay){
+
+		GameObject trump = GameObject.Find ("trump");
+		trump.transform.GetComponent<trump> ().canMove = false;
+		trump.transform.GetComponent<Animator> ().enabled = false;
+
+		transform.GetComponent<AudioSource> ().Stop ();
+
+		GameObject[] o = GameObject.FindGameObjectsWithTag ("Ghost");
+
+		foreach (GameObject ghost in o) {
+
+			ghost.transform.GetComponent<Ghost> ().canMove = false;
+			ghost.transform.GetComponent<Animator> ().enabled = false;
+		}
+
+		yield return new WaitForSeconds (delay);
+
+		StartCoroutine (BlinkBoard (2));
+	}
+
+	IEnumerator BlinkBoard(float delay){
+
+		GameObject trump = GameObject.Find ("trump");
+		trump.transform.GetComponent<SpriteRenderer> ().enabled = false;
+
+		GameObject[] o = GameObject.FindGameObjectsWithTag ("Ghost");
+
+		foreach (GameObject ghost in o) {
+
+			ghost.transform.GetComponent<SpriteRenderer> ().enabled = false;
+		}
+		//blink board
+		shouldBlink = true;
+		yield return new WaitForSeconds (2);
+
+		shouldBlink = false;
+		//restart game
+		StartNextLevel();
+	}
+
+	private void StartNextLevel(){
+
+		SceneManager.LoadScene ("Level1");
+	}
+
+	private void CheckShouldBlink(){
+
+		if (shouldBlink) {
+
+			if (blinkIntervalTimer < blinkIntervalTime) {
+
+				blinkIntervalTimer += Time.deltaTime;
+			} else {
+				blinkIntervalTimer = 0;
+				if (GameObject.Find ("Mapa").transform.GetComponent<SpriteRenderer> ().sprite == mapaPlava) {
+					
+					GameObject.Find("Mapa").transform.GetComponent<SpriteRenderer>().sprite=mapaBijela;
+				} else {
+					GameObject.Find ("Mapa").transform.GetComponent<SpriteRenderer> ().sprite = mapaPlava;
+				}
+				}
+			}
+
+	}
 
 	public void StartGame(){
 
-		if (GameMenu.isOnePlayerGame) {
 
-			playerTwoUp.GetComponent<Text> ().enabled = false;
-			playerTwoScoreText.GetComponent<Text> ().enabled = false;
-		} else {
-
-			playerTwoUp.GetComponent<Text> ().enabled = true;
-			playerTwoScoreText.GetComponent<Text> ().enabled = true;
-		}
 
 		if (isPlayerOneUp) {
 			StartCoroutine (StartBlinking (playerOneUp));
